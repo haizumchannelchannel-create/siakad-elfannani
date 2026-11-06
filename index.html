@@ -1543,7 +1543,24 @@
                 container.classList.add('hidden');
             });
         }
-function cetakPDFKelasAktif() {
+        
+        function cetakDataSantriLaporan() {
+            const filtered = getFilteredSantriList();
+            const wrapper = document.getElementById('pdf-table-wrapper');
+            let rows = '';
+
+            filtered.forEach((santri, i) => {
+                const kelas = window.kelasData.find(k => k.id === santri.kelasId);
+                const namaKelas = kelas ? (kelas.nama || kelas.KELAS || '-') : '-';
+                const namaUstadz = getNamaUstadz(kelas);
+                rows += `<tr><td style="text-align:center;">${i + 1}</td><td style="text-align:center;">${santri.nis || '-'}</td><td>${santri.nama}</td><td>${namaKelas}</td><td>${namaUstadz}</td></tr>`;
+            });
+
+            wrapper.innerHTML = `<table class="pdf-table"><thead><tr><th>No</th><th>NIS</th><th>Nama Santri</th><th>Kelas</th><th>Ustadz</th></tr></thead><tbody>${rows}</tbody></table>`;
+            triggerPDFDownload('LAPORAN DATA SANTRI', 'Laporan_Data_Santri.pdf');
+        }
+
+        function cetakPDFKelasAktif() {
             if (!activeDetailKelasId) {
                 alert('Tidak ada kelas yang aktif!');
                 return;
@@ -1586,22 +1603,6 @@ function cetakPDFKelasAktif() {
 
             triggerPDFDownload(`LAPORAN KELAS ${namaKelas.toUpperCase()}`, `Laporan_Kelas_${namaKelas.replace(/\s+/g, '_')}.pdf`);
         }
-        function cetakDataSantriLaporan() {
-            const filtered = getFilteredSantriList();
-            const wrapper = document.getElementById('pdf-table-wrapper');
-            let rows = '';
-
-            filtered.forEach((santri, i) => {
-                const kelas = window.kelasData.find(k => k.id === santri.kelasId);
-                const namaKelas = kelas ? (kelas.nama || kelas.KELAS || '-') : '-';
-                const namaUstadz = getNamaUstadz(kelas);
-                rows += `<tr><td style="text-align:center;">${i + 1}</td><td style="text-align:center;">${santri.nis || '-'}</td><td>${santri.nama}</td><td>${namaKelas}</td><td>${namaUstadz}</td></tr>`;
-            });
-
-            wrapper.innerHTML = `<table class="pdf-table"><thead><tr><th>No</th><th>NIS</th><th>Nama Santri</th><th>Kelas</th><th>Ustadz</th></tr></thead><tbody>${rows}</tbody></table>`;
-            triggerPDFDownload('LAPORAN DATA SANTRI', 'Laporan_Data_Santri.pdf');
-        }
-
         function cetakPDFHariIni() {
             const today = document.getElementById('absen-date-picker').value || getTodayISOString();
             const list = window.absensiData.filter(a => a.tanggal === today);
