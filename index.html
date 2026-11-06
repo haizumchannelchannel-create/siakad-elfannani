@@ -1249,21 +1249,6 @@
                 alert('Semua data kelas dan santri berhasil dibersihkan bersih total!');
             }
         }
-
-        function resetSemuaData() {
-            if (confirm('Hapus seluruh data kelas dan santri?')) {
-                window.kelasData = [];
-                window.santriData = [];
-                window.absensiData = [];
-                saveDataToStorage();
-                populateKelasDropdowns();
-                renderKelasGrid();
-                renderSantriTable();
-                renderDashboard();
-                alert('Semua data dibersihkan.');
-            }
-        }
-
         function getFilteredSantriList() {
             const searchInput = document.getElementById('search-santri-input');
             const filterSelect = document.getElementById('filter-santri-kelas');
