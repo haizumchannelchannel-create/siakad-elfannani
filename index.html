@@ -15,24 +15,22 @@
     <!-- html2pdf.js for generating official PDF reports -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <!-- Firebase SDK Modules - REALTIME DATABASE VERSION -->
+   <!-- FIREBASE REALTIME DATABASE MODULE -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-        const appId = 'siakad-elfannani';
-        const customDatabaseURL = 'https://siakad-elfannani-default-rtdb.firebaseio.com';
-
-        cconst firebaseConfig = {
-    apiKey: "AIzaSyC_eFpSaXl6BycgODZX_ANiB8lL7ZKuWhY",
-    authDomain: "siakad-elfannani-83d70.firebaseapp.com",
-    databaseURL: "https://siakad-elfannani-83d70-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "siakad-elfannani-83d70",
-    storageBucket: "siakad-elfannani-83d70.firebasestorage.app",
-    messagingSenderId: "375641972732",
-    appId: "1:375641972732:web:6d9b7499c01c5fa3bc9c79"
-};
+        // Konfigurasi Firebase Resmi Project Ustadz (Tanpa Template Literal yang Error)
+        const firebaseConfig = {
+            apiKey: "AIzaSyC_eFpSaXl6BycgODZX_ANiB8lL7ZKuWhY",
+            authDomain: "siakad-elfannani-83d70.firebaseapp.com",
+            databaseURL: "https://siakad-elfannani-83d70-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "siakad-elfannani-83d70",
+            storageBucket: "siakad-elfannani-83d70.firebasestorage.app",
+            messagingSenderId: "375641972732",
+            appId: "1:375641972732:web:6d9b7499c01c5fa3bc9c79"
+        };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -43,10 +41,10 @@
         const ABSENSI_REF = ref(db, 'data/absensi');
 
         signInAnonymously(auth).then(() => {
-            console.log("Koneksi Firebase Realtime Database Terhubung!");
+            console.log("Firebase Terhubung!");
             setupRealtimeListeners();
         }).catch(err => {
-            console.warn("Menggunakan penyimpanan lokal:", err);
+            console.warn("Auth warning:", err);
             setupRealtimeListeners();
         });
 
@@ -55,10 +53,10 @@
                 const val = snapshot.val();
                 if (val) {
                     window.kelasData = Object.values(val);
-                    window.saveDataToStorage();
-                    window.populateKelasDropdowns();
+                    if (typeof window.saveDataToStorage === 'function') window.saveDataToStorage();
+                    if (typeof window.populateKelasDropdowns === 'function') window.populateKelasDropdowns();
                     if (document.getElementById('page-kelas') && !document.getElementById('page-kelas').classList.contains('hidden')) {
-                        window.renderKelasGrid();
+                        if (typeof window.renderKelasGrid === 'function') window.renderKelasGrid();
                     }
                 }
             });
@@ -67,9 +65,9 @@
                 const val = snapshot.val();
                 if (val) {
                     window.santriData = Object.values(val);
-                    window.saveDataToStorage();
+                    if (typeof window.saveDataToStorage === 'function') window.saveDataToStorage();
                     if (document.getElementById('page-santri') && !document.getElementById('page-santri').classList.contains('hidden')) {
-                        window.renderSantriTable();
+                        if (typeof window.renderSantriTable === 'function') window.renderSantriTable();
                     }
                 }
             });
@@ -78,10 +76,10 @@
                 const val = snapshot.val();
                 if (val) {
                     window.absensiData = Object.values(val);
-                    window.saveDataToStorage();
-                    window.renderDashboard();
+                    if (typeof window.saveDataToStorage === 'function') window.saveDataToStorage();
+                    if (typeof window.renderDashboard === 'function') window.renderDashboard();
                     if (document.getElementById('page-absen') && !document.getElementById('page-absen').classList.contains('hidden')) {
-                        window.loadTodayAttendance();
+                        if (typeof window.loadTodayAttendance === 'function') window.loadTodayAttendance();
                     }
                 }
             });
@@ -92,7 +90,7 @@
                 const itemRef = ref(db, `data/${collectionName}/${item.id}`);
                 await set(itemRef, item);
             } catch (e) {
-                console.error("Gagal simpan ke Realtime DB:", e);
+                console.error("Gagal simpan ke DB:", e);
             }
         };
 
@@ -101,7 +99,7 @@
                 const itemRef = ref(db, `data/${collectionName}/${itemId}`);
                 await remove(itemRef);
             } catch (e) {
-                console.error("Gagal hapus dari Realtime DB:", e);
+                console.error("Gagal hapus dari DB:", e);
             }
         };
 
