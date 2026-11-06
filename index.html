@@ -1149,7 +1149,7 @@
             event.target.value = '';
         }
 
-        window.importSantriExcel = function(event) {
+        wwindow.importSantriExcel = function(event) {
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
@@ -1178,9 +1178,20 @@
                         const ustadz = ustadzKey && r[ustadzKey] !== undefined ? String(r[ustadzKey]).trim() : 'Ust. Pengampu';
 
                         if (nama && nama.toLowerCase() !== 'nama santri') {
-                            let target = window.kelasData.find(k => (k.nama && k.nama.toLowerCase() === kelasNama.toLowerCase()) || (k.KELAS && k.KELAS.toLowerCase() === kelasNama.toLowerCase()));
+                            // KUNCI UTAMA: Cari kelas berdasarkan KESAMAAN NAMA KELAS DAN NAMA USTADZ SEKALIGUS
+                            let target = window.kelasData.find(k => {
+                                const kNama = (k.nama || k.KELAS || '').trim().toLowerCase();
+                                const kUst = (k.ustadz || k.USTADZ || k.ustdh || k.pengampu || '').trim().toLowerCase();
+                                return kNama === kelasNama.toLowerCase() && kUst === ustadz.toLowerCase();
+                            });
+
+                            // Jika kombinasi kelas & ustadz belum ada, buat kelas baru yang unik
                             if (!target) {
-                                target = { id: 'K_' + Date.now() + '_' + Math.floor(Math.random()*1000), nama: kelasNama, ustadz: ustadz };
+                                target = { 
+                                    id: 'K_' + Date.now() + '_' + Math.floor(Math.random()*10000), 
+                                    nama: kelasNama, 
+                                    ustadz: ustadz 
+                                };
                                 window.kelasData.push(target);
                                 if (window.saveToFirestore) window.saveToFirestore('kelas', target);
                             }
@@ -1198,13 +1209,14 @@
                         }
                     });
 
-                    saveDataToStorage();
-                    populateKelasDropdowns();
-                    renderSantriTable();
-                    renderKelasGrid();
-                    renderDashboard();
-                    alert(`Alhamdulillah! Berhasil mengimpor ${count} santri.`);
+                    window.saveDataToStorage();
+                    window.populateKelasDropdowns();
+                    window.renderSantriTable();
+                    window.renderKelasGrid();
+                    window.renderDashboard();
+                    alert(`Alhamdulillah! Berhasil mengimpor ${count} santri dengan pemisahan ustadz yang akurat.`);
                 } catch (err) {
+                    console.error(err);
                     alert('Gagal membaca file Excel Santri.');
                 }
             };
