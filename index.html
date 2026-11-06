@@ -16,12 +16,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
    <!-- FIREBASE REALTIME DATABASE MODULE -->
+    <!-- FIREBASE REALTIME DATABASE & SYNC SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-        // Konfigurasi Firebase Resmi Project Ustadz (Tanpa Template Literal yang Error)
         const firebaseConfig = {
             apiKey: "AIzaSyC_eFpSaXl6BycgODZX_ANiB8lL7ZKuWhY",
             authDomain: "siakad-elfannani-83d70.firebaseapp.com",
@@ -40,47 +40,61 @@
         const SANTRI_REF = ref(db, 'data/santri');
         const ABSENSI_REF = ref(db, 'data/absensi');
 
+        // Global data array
+        window.kelasData = [];
+        window.santriData = [];
+        window.absensiData = [];
+
         signInAnonymously(auth).then(() => {
             console.log("Firebase Terhubung!");
-            setupRealtimeListeners();
+            initFirebaseListeners();
         }).catch(err => {
             console.warn("Auth warning:", err);
-            setupRealtimeListeners();
+            initFirebaseListeners();
         });
 
-        function setupRealtimeListeners() {
+        // LISTENER UTAMA: AMBIL DATA LANGSUNG DARI FIREBASE SEBAGAI SUMBER UTAMA
+        function initFirebaseListeners() {
             onValue(KELAS_REF, (snapshot) => {
                 const val = snapshot.val();
                 if (val) {
                     window.kelasData = Object.values(val);
-                    if (typeof window.saveDataToStorage === 'function') window.saveDataToStorage();
-                    if (typeof window.populateKelasDropdowns === 'function') window.populateKelasDropdowns();
-                    if (document.getElementById('page-kelas') && !document.getElementById('page-kelas').classList.contains('hidden')) {
-                        if (typeof window.renderKelasGrid === 'function') window.renderKelasGrid();
-                    }
+                } else {
+                    window.kelasData = [];
                 }
+                localStorage.setItem('elfannani_kelas', JSON.stringify(window.kelasData));
+                window.populateKelasDropdowns();
+                if (document.getElementById('page-kelas') && !document.getElementById('page-kelas').classList.contains('hidden')) {
+                    window.renderKelasGrid();
+                }
+                window.renderDashboard();
             });
 
             onValue(SANTRI_REF, (snapshot) => {
                 const val = snapshot.val();
                 if (val) {
                     window.santriData = Object.values(val);
-                    if (typeof window.saveDataToStorage === 'function') window.saveDataToStorage();
-                    if (document.getElementById('page-santri') && !document.getElementById('page-santri').classList.contains('hidden')) {
-                        if (typeof window.renderSantriTable === 'function') window.renderSantriTable();
-                    }
+                } else {
+                    window.santriData = [];
                 }
+                localStorage.setItem('elfannani_santri', JSON.stringify(window.santriData));
+                if (document.getElementById('page-santri') && !document.getElementById('page-santri').classList.contains('hidden')) {
+                    window.renderSantriTable();
+                }
+                window.renderDashboard();
             });
 
             onValue(ABSENSI_REF, (snapshot) => {
                 const val = snapshot.val();
                 if (val) {
                     window.absensiData = Object.values(val);
-                    if (typeof window.saveDataToStorage === 'function') window.saveDataToStorage();
-                    if (typeof window.renderDashboard === 'function') window.renderDashboard();
-                    if (document.getElementById('page-absen') && !document.getElementById('page-absen').classList.contains('hidden')) {
-                        if (typeof window.loadTodayAttendance === 'function') window.loadTodayAttendance();
-                    }
+                } else {
+                    window.absensiData = [];
+                }
+                localStorage.setItem('elfannani_absensi', JSON.stringify(window.absensiData));
+                window.renderDashboard();
+                if (document.getElementById('page-absen') && !document.getElementById('page-absen').classList.contains('hidden')) {
+                    window.loadTodayAttendance();
                 }
             });
         }
@@ -105,8 +119,6 @@
 
         window.db = db;
     </script>
-
-    <script>
         tailwind.config = {
             theme: {
                 extend: {
