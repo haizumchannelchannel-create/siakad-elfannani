@@ -1212,14 +1212,41 @@
         };
 
         function resetDataSantriSaja() {
-            if (confirm('Kosongkan seluruh data santri?')) {
-                window.santriData.forEach(s => { if (window.deleteFromFirestore) window.deleteFromFirestore('santri', s.id); });
+            if (confirm('Kosongkan seluruh data santri dari web dan database?')) {
+                // Hapus satu per satu dari Firebase Realtime Database
+                window.santriData.forEach(s => { 
+                    if (window.deleteFromFirestore) window.deleteFromFirestore('santri', s.id); 
+                });
                 window.santriData = [];
                 window.absensiData = [];
                 saveDataToStorage();
                 renderSantriTable();
                 renderDashboard();
-                alert('Data santri dikosongkan.');
+                alert('Data santri berhasil dikosongkan bersih dari database!');
+            }
+        }
+
+        function resetSemuaData() {
+            if (confirm('Hapus SELURUH data kelas dan santri dari web dan database?')) {
+                // Hapus data kelas dari Firebase
+                window.kelasData.forEach(k => { 
+                    if (window.deleteFromFirestore) window.deleteFromFirestore('kelas', k.id); 
+                });
+                // Hapus data santri dari Firebase
+                window.santriData.forEach(s => { 
+                    if (window.deleteFromFirestore) window.deleteFromFirestore('santri', s.id); 
+                });
+
+                window.kelasData = [];
+                window.santriData = [];
+                window.absensiData = [];
+                saveDataToStorage();
+                
+                populateKelasDropdowns();
+                renderKelasGrid();
+                renderSantriTable();
+                renderDashboard();
+                alert('Semua data kelas dan santri berhasil dibersihkan bersih total!');
             }
         }
 
