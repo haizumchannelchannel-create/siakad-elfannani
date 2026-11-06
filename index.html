@@ -1141,48 +1141,88 @@
             event.target.value = '';
         }
 
-        function importSantriExcel(event) {
+        // EXCEL IMPORT SANTRI YANG PALING SUPEL & KEBAL SALAH KETIK KOLOM
+        window.importSantriExcel = function(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
                     const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
                     let count = 0;
 
-                    rows.forEach(r => {
-                        const nis = r['NIS'] || r['nis'] || '';
-                        const nama = r['Nama Santri'] || r['nama santri'] || r['Nama'] || '';
-                        const kelasNama = r['Kelas'] || r['kelas'] || '';
-                        const ustadz = r['Ustadz'] || r['ustadz'] || '';
+                    if (rows.length === 0) {
+                        alert('File Excel kosong atau format sheet tidak terbaca!');
+                        return;
+                    }
 
-                        if (nama) {
-                            let target = kelasData.find(k => k.nama.toLowerCase() === String(kelasNama).toLowerCase());
-                            if (!target && kelasNama) {
-                                target = { id: 'K_' + Date.now(), nama: String(kelasNama).trim(), ustadz: String(ustadz || 'Ust. Pengampu') };
-                                kelasData.push(target);
+                    rows.forEach(r => {
+                        const keys = Object.keys(r);
+                        
+                        // Cari kolom NIS (toleransi berbagai penulisan)
+                        const nisKey = keys.find(k => {
+                            const lk = k.trim().toLowerCase();
+                            return lk.includes('nis') || lk.includes('induk') || lk.includes('no');
+                        }) || keys[0];
+
+                        // Cari kolom NAMA SANTRI (toleransi berbagai penulisan)
+                        const namaKey = keys.find(k => {
+                            const lk = k.trim().toLowerCase();
+                            return (lk.includes('nama') || lk.includes('santri')) && !lk.includes('kelas') && !lk.includes('ustadz');
+                        }) || keys[1];
+
+                        // Cari kolom KELAS
+                        const kelasKey = keys.find(k => {
+                            const lk = k.trim().toLowerCase();
+                            return lk.includes('kelas') || lk.includes('ruang');
+                        }) || keys[2];
+
+                        // Cari kolom USTADZ
+                        const ustadzKey = keys.find(k => {
+                            const lk = k.trim().toLowerCase();
+                            return lk.includes('ustadz') || lk.includes('guru') || lk.includes('pengampu');
+                        }) || keys[3];
+
+                        const nis = nisKey && r[nisKey] !== undefined ? String(r[nisKey]).trim() : '-';
+                        const nama = namaKey && r[namaKey] !== undefined ? String(r[namaKey]).trim() : '';
+                        const kelasNama = kelasKey && r[kelasKey] !== undefined ? String(r[kelasKey]).trim() : 'Kelas Umum';
+                        const ustadz = ustadzKey && r[ustadzKey] !== undefined ? String(r[ustadzKey]).trim() : 'Ust. Pengampu';
+
+                        if (nama && nama.toLowerCase() !== 'nama santri') {
+                            let target = window.kelasData.find(k => k.nama.toLowerCase() === kelasNama.toLowerCase());
+                            if (!target) {
+                                target = { id: 'K_' + Date.now() + '_' + Math.floor(Math.random()*1000), nama: kelasNama, ustadz: ustadz };
+                                window.kelasData.push(target);
                                 if (window.saveToFirestore) window.saveToFirestore('kelas', target);
                             }
 
-                            const obj = { id: 'S_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4), nis: String(nis || '-').trim(), nama: String(nama).trim(), kelasId: target ? target.id : (kelasData[0] ? kelasData[0].id : 'K1') };
-                            santriData.push(obj);
+                            const obj = { 
+                                id: 'S_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5), 
+                                nis, 
+                                nama, 
+                                kelasId: target.id 
+                            };
+                            
+                            window.santriData.push(obj);
                             if (window.saveToFirestore) window.saveToFirestore('santri', obj);
                             count++;
                         }
                     });
-                    saveDataToStorage();
-                    populateKelasDropdowns();
-                    renderSantriTable();
-                    alert(`Berhasil mengimpor ${count} santri!`);
-                } catch (err) { alert('Gagal membaca file Excel Santri.'); }
+
+                    window.saveDataToStorage();
+                    window.populateKelasDropdowns();
+                    window.renderSantriTable();
+                    window.renderDashboard();
+                    alert(`Alhamdulillah! Berhasil mengimpor ${count} santri ke Firebase Realtime Database.`);
+                } catch (err) {
+                    console.error(err);
+                    alert('Gagal membaca file Excel Santri. Pastikan format file .xlsx valid.');
+                }
             };
             reader.readAsArrayBuffer(file);
             event.target.value = '';
-        }
-
+        };
         function resetDataSantriSaja() {
             if (confirm('Kosongkan seluruh data santri?')) {
                 santriData.forEach(s => { if (window.deleteFromFirestore) window.deleteFromFirestore('santri', s.id); });
