@@ -393,7 +393,7 @@
                     <div class="flex flex-wrap gap-2">
                         <button onclick="resetSemuaData()" class="bg-red-600 hover:bg-red-700 text-white text-xs px-3.5 py-2.5 rounded-xl font-semibold shadow transition flex items-center space-x-2">
                             <i class="fas fa-trash-alt"></i>
-                            <span>Reset / Kosongkan Data</span>
+                            <span>Reset / Kosongkan Data Kelas</span>
                         </button>
                         <button onclick="openModalTambahKelas()" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs px-3.5 py-2.5 rounded-xl font-semibold shadow transition flex items-center space-x-2">
                             <i class="fas fa-plus"></i>
@@ -916,6 +916,11 @@
             populateKelasDropdowns();
         }
 
+        function getNamaUstadz(kelas) {
+            if (!kelas) return 'Ust. Pengampu';
+            return kelas.ustadz || kelas.USTADZ || kelas.ustdh || kelas.pengampu || kelas.guru || 'Ust. Pengampu';
+        }
+
         function renderDashboard() {
             document.getElementById('stat-total-santri').textContent = window.santriData.length;
             document.getElementById('stat-total-kelas').textContent = window.kelasData.length;
@@ -940,12 +945,11 @@
             todayAbsensi.slice(0, 5).forEach(abs => {
                 const santri = window.santriData.find(s => s.id === abs.santriId);
                 const kelas = santri ? window.kelasData.find(k => k.id === santri.kelasId) : null;
-                const namaUstadz = kelas ? (kelas.ustadz || kelas.USTADZ || kelas.ustdh || kelas.pengampu || 'Ust. Pengampu') : '-';
                 tbody.innerHTML += `
                     <tr>
                         <td class="p-3 font-semibold text-gray-800">${santri ? santri.nama : '-'}</td>
                         <td class="p-3 text-gray-600">${kelas ? (kelas.nama || kelas.KELAS) : '-'}</td>
-                        <td class="p-3 text-gray-600">${namaUstadz}</td>
+                        <td class="p-3 text-gray-600">${getNamaUstadz(kelas)}</td>
                         <td class="p-3 font-bold text-xs">${abs.status}</td>
                     </tr>
                 `;
@@ -974,12 +978,11 @@
                 list.forEach(abs => {
                     const santri = window.santriData.find(s => s.id === abs.santriId);
                     const kelas = santri ? window.kelasData.find(k => k.id === santri.kelasId) : null;
-                    const namaUstadz = kelas ? (kelas.ustadz || kelas.USTADZ || kelas.ustdh || kelas.pengampu || 'Ust. Pengampu') : '-';
                     tbody.innerHTML += `
                         <tr>
                             <td class="p-2.5 font-semibold">${santri ? santri.nama : '-'}</td>
                             <td class="p-2.5">${kelas ? (kelas.nama || kelas.KELAS) : '-'}</td>
-                            <td class="p-2.5">${namaUstadz}</td>
+                            <td class="p-2.5">${getNamaUstadz(kelas)}</td>
                             <td class="p-2.5 font-bold">${abs.status}</td>
                         </tr>
                     `;
@@ -988,7 +991,6 @@
             document.getElementById('modal-dashboard-detail').classList.remove('hidden');
         }
 
-        // RENDER KELAS GRID YANG SUDAH DIPERBAIKI (MENDUKUNG SEMUA VARIASI NAMA KUNCI USTADZ)
         window.renderKelasGrid = function() {
             const container = document.getElementById('kelas-grid');
             if (!container) return;
@@ -1001,7 +1003,7 @@
 
             window.kelasData.forEach(kelas => {
                 const namaKelas = kelas.nama || kelas.KELAS || 'Tanpa Nama';
-                const namaUstadz = kelas.ustadz || kelas.USTADZ || kelas.ustdh || kelas.pengampu || 'Ust. Pengampu';
+                const namaUstadz = getNamaUstadz(kelas);
                 const jumlahSantri = window.santriData.filter(s => s.kelasId === kelas.id || (s.kelas && s.kelas.toLowerCase() === namaKelas.toLowerCase())).length;
 
                 const card = document.createElement('div');
@@ -1047,14 +1049,13 @@
             closeModal('modal-tambah-kelas');
         }
 
-        // FUNGSI BUKA DETAIL KELAS YANG DIPERBAIKI AGAR TOMBOL BERFUNGSI SEMPURNA
         window.openDetailKelas = function(kelasId) {
             activeDetailKelasId = kelasId;
             const kelas = window.kelasData.find(k => k.id === kelasId);
             if (!kelas) return;
 
             const namaKelas = kelas.nama || kelas.KELAS || 'Kelas';
-            const namaUstadz = kelas.ustadz || kelas.USTADZ || kelas.ustdh || kelas.pengampu || 'Ust. Pengampu';
+            const namaUstadz = getNamaUstadz(kelas);
 
             document.getElementById('modal-detail-kelas-title').textContent = `Kelas: ${namaKelas}`;
             document.getElementById('modal-detail-kelas-subtitle').textContent = `Pengampu: ${namaUstadz}`;
@@ -1104,7 +1105,7 @@
 
             window.kelasData.forEach(k => {
                 const nama = k.nama || k.KELAS || 'Kelas';
-                const ustadz = k.ustadz || k.USTADZ || k.ustdh || k.pengampu || 'Ust. Pengampu';
+                const ustadz = getNamaUstadz(k);
                 const label = `${nama} - ${ustadz}`;
                 filterSelect.innerHTML += `<option value="${k.id}">${label}</option>`;
                 formSelect.innerHTML += `<option value="${k.id}">${label}</option>`;
@@ -1126,7 +1127,7 @@
                     rows.forEach(r => {
                         const keys = Object.keys(r);
                         const namaKey = keys.find(k => k.trim().toLowerCase().includes('kelas') || k.trim().toLowerCase().includes('nama')) || keys[0];
-                        const ustadzKey = keys.find(k => k.trim().toLowerCase().includes('ustadz') || k.trim().toLowerCase().includes('guru') || k.trim().toLowerCase().includes('pengampu')) || keys[1];
+                        const ustadzKey = keys.find(k => k.trim().toLowerCase().includes('ustadz') || k.trim().toLowerCase().includes('guru') || k.trim().toLowerCase().includes('pengampu') || k.trim().toLowerCase().includes('pengajar')) || keys[1];
 
                         const nama = namaKey && r[namaKey] !== undefined ? String(r[namaKey]).trim() : '';
                         const ustadz = ustadzKey && r[ustadzKey] !== undefined ? String(r[ustadzKey]).trim() : 'Ust. Pengampu';
@@ -1212,8 +1213,7 @@
         };
 
         function resetDataSantriSaja() {
-            if (confirm('Kosongkan seluruh data santri dari web dan database?')) {
-                // Hapus satu per satu dari Firebase Realtime Database
+            if (confirm('Kosongkan seluruh data santri dari Web dan Cloud Database?')) {
                 window.santriData.forEach(s => { 
                     if (window.deleteFromFirestore) window.deleteFromFirestore('santri', s.id); 
                 });
@@ -1222,17 +1222,18 @@
                 saveDataToStorage();
                 renderSantriTable();
                 renderDashboard();
-                alert('Data santri berhasil dikosongkan bersih dari database!');
+                alert('Data santri berhasil dikosongkan bersih dari Web & Database!');
             }
         }
 
+        // FUNGSI RESET SEMUA DATA KELAS (DILENGKAPI PENGHAPUSAN PERMANEN KE FIREBASE CLOUD)
         function resetSemuaData() {
-            if (confirm('Hapus SELURUH data kelas dan santri dari web dan database?')) {
-                // Hapus data kelas dari Firebase
+            if (confirm('Hapus SELURUH data kelas dan santri dari Web dan Firebase Cloud Database?')) {
+                // 1. Hapus kelas dari Firebase Cloud
                 window.kelasData.forEach(k => { 
                     if (window.deleteFromFirestore) window.deleteFromFirestore('kelas', k.id); 
                 });
-                // Hapus data santri dari Firebase
+                // 2. Hapus santri dari Firebase Cloud
                 window.santriData.forEach(s => { 
                     if (window.deleteFromFirestore) window.deleteFromFirestore('santri', s.id); 
                 });
@@ -1246,9 +1247,10 @@
                 renderKelasGrid();
                 renderSantriTable();
                 renderDashboard();
-                alert('Semua data kelas dan santri berhasil dibersihkan bersih total!');
+                alert('Alhamdulillah! Seluruh data kelas berhasil dikosongkan secara permanen dari Web & Database.');
             }
         }
+
         function getFilteredSantriList() {
             const searchInput = document.getElementById('search-santri-input');
             const filterSelect = document.getElementById('filter-santri-kelas');
@@ -1283,7 +1285,7 @@
                 paginatedList.forEach(santri => {
                     const kelas = window.kelasData.find(k => k.id === santri.kelasId);
                     const namaKelas = kelas ? (kelas.nama || kelas.KELAS || '-') : '-';
-                    const namaUstadz = kelas ? (kelas.ustadz || kelas.USTADZ || kelas.ustdh || kelas.pengampu || 'Ust. Pengampu') : '-';
+                    const namaUstadz = getNamaUstadz(kelas);
                     tbody.innerHTML += `
                         <tr class="hover:bg-gray-50">
                             <td class="p-3.5 font-mono text-xs text-gray-500">${santri.nis || '-'}</td>
@@ -1364,7 +1366,7 @@
         function hapusSantri(santriId) {
             if (confirm('Hapus santri ini?')) {
                 window.santriData = window.santriData.filter(s => s.id !== santriId);
-                window.absensiData = window.absensiData.filter(a => a.santriId !== santriId);
+                window.absensiData = window.absensiData.filter(a => a.id !== santriId);
                 saveDataToStorage();
                 if (window.deleteFromFirestore) window.deleteFromFirestore('santri', santriId);
                 renderSantriTable();
@@ -1380,7 +1382,7 @@
             matches.forEach(santri => {
                 const kelas = window.kelasData.find(k => k.id === santri.kelasId);
                 const namaKelas = kelas ? (kelas.nama || kelas.KELAS || '') : '';
-                const namaUstadz = kelas ? (kelas.ustadz || kelas.USTADZ || kelas.ustdh || kelas.pengampu || '-') : '-';
+                const namaUstadz = getNamaUstadz(kelas);
 
                 const item = document.createElement('div');
                 item.className = "p-3 hover:bg-emerald-50 cursor-pointer border-b text-xs flex justify-between";
@@ -1431,7 +1433,7 @@
                 const santri = window.santriData.find(s => s.id === abs.santriId);
                 const kelas = santri ? window.kelasData.find(k => k.id === santri.kelasId) : null;
                 const namaKelas = kelas ? (kelas.nama || kelas.KELAS || '-') : '-';
-                const namaUstadz = kelas ? (kelas.ustadz || kelas.USTADZ || kelas.ustdh || kelas.pengampu || 'Ust. Pengampu') : '-';
+                const namaUstadz = getNamaUstadz(kelas);
                 tbody.innerHTML += `
                     <tr>
                         <td class="p-3 font-semibold">${santri ? santri.nama : '-'}</td>
@@ -1459,7 +1461,7 @@
 
             window.kelasData.forEach(kelas => {
                 const namaKelas = kelas.nama || kelas.KELAS || 'Kelas';
-                const namaUstadz = kelas.ustadz || kelas.USTADZ || kelas.ustdh || kelas.pengampu || 'Ust. Pengampu';
+                const namaUstadz = getNamaUstadz(kelas);
                 const listSantri = window.santriData.filter(s => s.kelasId === kelas.id || (s.kelas && s.kelas.toLowerCase() === namaKelas.toLowerCase()));
                 let rows = '';
 
@@ -1538,7 +1540,7 @@
             filtered.forEach((santri, i) => {
                 const kelas = window.kelasData.find(k => k.id === santri.kelasId);
                 const namaKelas = kelas ? (kelas.nama || kelas.KELAS || '-') : '-';
-                const namaUstadz = kelas ? (kelas.ustadz || kelas.USTADZ || kelas.ustdh || kelas.pengampu || '-') : '-';
+                const namaUstadz = getNamaUstadz(kelas);
                 rows += `<tr><td style="text-align:center;">${i + 1}</td><td style="text-align:center;">${santri.nis || '-'}</td><td>${santri.nama}</td><td>${namaKelas}</td><td>${namaUstadz}</td></tr>`;
             });
 
